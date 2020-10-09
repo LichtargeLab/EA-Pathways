@@ -30,11 +30,11 @@ Input cohort variant csv file formatting should include the following column hea
 Input cohort variants types should be labeled as:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;1. Missense mutation = "nonsynonymous SNV" <br>
 &nbsp;&nbsp;&nbsp;&nbsp;2. Silent mutation = "synonymous SNV"<br>
-&nbsp;&nbsp;&nbsp;&nbsp;3. Nonsense mutation = "stopgain SNV"<br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;4. FS-indel mutation = "fs-indel"<br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;5. Indel mutation = "indel"<br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;6. Start loss = "start loss"<br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;7. Stop loss = "stop loss"<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;3. Nonsense mutation = "stopgain SNV"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;4. FS-indel mutation = "fs-indel"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;5. Indel mutation = "indel"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;6. Start loss = "start loss"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;7. Stop loss = "stop loss"<br>
 
 Input cohort variant EA scores should be labeled as:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;1. Missense mutation EA score = float EA score <br>
