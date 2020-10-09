@@ -1,0 +1,38 @@
+Summary of Mutations in Input Samples:
+
+Total number of mutations: 489
+Considered (relevant) SNVs: 
+nonsynonymous SNV
+stopgain SNV
+synonymous SNV
+stop loss
+start loss
+indel
+fs-indel
+Total number of relevant SNVs in input samples: 489
+
+Summary of relevant SNV data for input samples: 
+nonsynonymous SNV: 99
+stopgain SNV: 41
+synonymous SNV: 235
+stop loss: 41
+start loss: 41
+indel: 16
+fs-indel: 16
+
+
+Summary of Input Samples Mutations in Biological Groupings:
+
+Total number of biological groups: 2082
+Number of unique genes in biological groups: 8830
+Total number of input samples nonsynonymous SNVs in biological groups: 20
+Total number of input samples stopgain SNVs in biological groups: 16
+Total number of input samples synonymous SNVs in biological groups: 66
+Total number of input samples stop losss in biological groups: 16
+Total number of input samples start losss in biological groups: 16
+Total number of input samples indels in biological groups: 6
+Total number of input samples fs-indels in biological groups: 6
+Total input samples (relevant) SNVs in biological groups: 146
+Percentage input samples (relevant) SNVs in biological groups: 0.2985685071574642
+
+Time to generate basic stats: 1.1184308528900146
