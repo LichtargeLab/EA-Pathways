@@ -7,7 +7,7 @@
 import pandas as pd
 import numpy as np
 import time
-from statistics import stdev
+#from statistics import stdev
 
 def sample_and_groups_basic_stats(sample_input, groups_input, output_text_location, variant_types):
 
