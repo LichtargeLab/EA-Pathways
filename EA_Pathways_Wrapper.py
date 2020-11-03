@@ -11,7 +11,7 @@
 # python packages and libraries
 import numpy as np
 import pandas as pd
-from statistics import stdev
+#from statistics import stdev
 from statsmodels.stats.multitest import fdrcorrection
 from scipy import stats as statistics
 from scipy.optimize import curve_fit
