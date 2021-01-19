@@ -41,8 +41,8 @@ from EA_Pathways_Step9_MakeHistograms import full_biological_group_historgrams, 
 sample_name = sys.argv[1]
 sample_file = sys.argv[2]
 groups_file = sys.argv[3]
-output_directory = sys.argv[4][2:]
-hist_directory = sys.argv[5][2:]
+output_directory = sys.argv[4]#[2:]
+hist_directory = sys.argv[5]#[2:]
 number_cores = int(sys.argv[6])
 
 # creating platform independent file paths
