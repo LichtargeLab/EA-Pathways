@@ -77,4 +77,5 @@ Column 4, "ALT": variant alternative allele <br>
 Column 5, "AC": variant allele count in reference population <br>
 Column 6, "AF": variant allele frequency in reference population <br>
 
+*There should be no header row in the reference_populaton_INFO.txt
 
