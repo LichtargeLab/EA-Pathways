@@ -2,12 +2,12 @@
 Repository for EA-Reactome code, environment, readme files.
 
 ## Reqirements
-Required packages are included in two environment.yml files. 
+Required packages are included in ea-pathways.yml. 
 
 ## Design
 <b>Part 1</b>: Parse VCF with cohort variants into required input format.<br>
 <i>Script</i>: EA_Pathways_VCFparser.py <br>
-<i>Environment</i>: ukbiobank_vcfParser.yml <br>
+<i>Environment</i>: ea-pathways.yml <br>
 
 <b>Part2</b>: Call wrapper script to analyze cohort variants with EA-Pathways.<br>
 <i>Script</i>: EA_Pathways_Wrapper.py - Call the EA_Pathways_Wrapper script and required parameters.<br>
@@ -29,7 +29,9 @@ parameter 4 = location of text file containing reference population variants use
 parameter 5 = allele count (AC) threshold indicating which alleles from the reference population should be included in output variant files<br>
 parameter 6 = location where output variant files will be saved<br><br>
 
-<b>Part2</b>:<br>
+<b>Part2</b>: Perform EA-Pathways analysis on parsed cohort variants.<br>
+<i>Script</i>:EA_Pathways_Wrapper.py <br>
+<i>Environment</i>: ea-pathways.yml <br>
 python EA_Pathways_Wrapper.py analysis_name input_variants input_groups output_directory output_hist_directory number_cores
 
 Command line parameters:<br>
