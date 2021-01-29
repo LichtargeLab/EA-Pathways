@@ -11,7 +11,7 @@ Required packages are included in ea-pathways.yml.
 
 <b>Part2</b>: Call wrapper script to analyze cohort variants with EA-Pathways.<br>
 <i>Script</i>: EA_Pathways_Wrapper.py - Call the EA_Pathways_Wrapper script and required parameters.<br>
-<i>Environment</i>: environment.yml<br>
+<i>Environment</i>: ea-pathways.yml<br>
 EA_Pathways_Wrapper.py should be located in same directory as other EA-Pathways ".py" files.
 Run time is dependent on number of variants in input cohort and number of biological groups analyzed.
 Code allows for parallelization of analysis to decrease run time. It is advised to use multiple cores when possible.
@@ -29,9 +29,7 @@ parameter 4 = location of text file containing reference population variants use
 parameter 5 = allele count (AC) threshold indicating which alleles from the reference population should be included in output variant files<br>
 parameter 6 = location where output variant files will be saved<br><br>
 
-<b>Part2</b>: Perform EA-Pathways analysis on parsed cohort variants.<br>
-<i>Script</i>:EA_Pathways_Wrapper.py <br>
-<i>Environment</i>: ea-pathways.yml <br>
+<b>Part2</b>:<br>
 python EA_Pathways_Wrapper.py analysis_name input_variants input_groups output_directory output_hist_directory number_cores
 
 Command line parameters:<br>
