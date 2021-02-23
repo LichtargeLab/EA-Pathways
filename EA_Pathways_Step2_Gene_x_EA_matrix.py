@@ -19,7 +19,7 @@ def generate_sample_gene_by_EAmatrix(user_defined_variants, sample_input, summar
 
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'stopgain SNV','Action'] = 100
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'stop loss','Action'] = 100
-    sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'start loss','Action'] = 100
+    sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'start loss','Action'] = 'synon'
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'fs-indel', 'Action'] = 100
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'synonymous SNV','Action'] = 'synon'
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'indel', 'Action'] = 'synon'
@@ -66,8 +66,8 @@ def generate_sample_gene_by_EAmatrix(user_defined_variants, sample_input, summar
     for item in user_defined_variants:
         text_file.write(item + '\n')
     text_file.write('\n')
-    text_file.write('Number of stopgain SNV, fs-indels, start loss SNV, and stop loss SNV annotated with EA = 100: '+ str(len(EA_100)) + '\n')
-    text_file.write('Number of synonymous SNV and indels annotated with EA = synon: '+ str(len(syn_0)) + '\n')
+    text_file.write('Number of stopgain SNV, fs-indels, and stop loss SNV annotated with EA = 100: '+ str(len(EA_100)) + '\n')
+    text_file.write('Number of synonymous SNV, indels, and start loss SNV annotated with EA = synon: '+ str(len(syn_0)) + '\n')
     text_file.write('Number of nonsynonymous SNV w/o EA annotated with EA = no_EA: '+ str(len(nonsyn_missing_EA))+ '\n')
     text_file.write('Number of nonsynonymous SNV with EA scores: '+ str(len(nonsyn_with_EA)) + '\n')
     text_file.write('Shape of input sample matrix (relevant SNVs only): '+ str(sample_input_filtered.shape)+ '\n')
