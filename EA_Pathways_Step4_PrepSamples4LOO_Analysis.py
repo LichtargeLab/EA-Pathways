@@ -21,6 +21,7 @@ def PrepSamples4LOO_Analysis(sample_input_genes, all_groups_genes_unique, nonsyn
     groups_with_noSigGenes_and_EA_scores_lst = []
     genes_in_cohort_and_groups_with_mutation = []
     nonsyn_error_genes_in_cohort_and_groups = []
+    #total_variants_in_group = []
 
     for row_outer in range(groups_input.shape[0]):
         #omit from analysis any groups with only one gene
@@ -30,10 +31,12 @@ def PrepSamples4LOO_Analysis(sample_input_genes, all_groups_genes_unique, nonsyn
             group_lst_all = []
             group_lst_noSigGenes = []
             group_lst_error_genes = []
+            #group_lst_variants = []
 
             group_name = groups_input.iloc[row_outer,0]
             group_lst_all.append(group_name)
             group_lst_noSigGenes.append(group_name)
+            #group_lst_variants.append(group_name)
             #group_lst_error_genes.append(group_name)
 
             group_genes = list(groups_input.iloc[row_outer, 2:groups_input.shape[1]].dropna())
@@ -78,6 +81,7 @@ def PrepSamples4LOO_Analysis(sample_input_genes, all_groups_genes_unique, nonsyn
     group_genes_with_EAscores_lst = [] #v3 count includes synon SNV
     group_number_genes_with_EAscores_lst = [] #v3 count includes synon SNV
     group_sig_single_genes_lst = []
+    group_total_variants_in_cohort_lst = []
 
     for group in groups_with_genes_and_EA_scores_lst:
         group_name = group[0]
@@ -88,12 +92,16 @@ def PrepSamples4LOO_Analysis(sample_input_genes, all_groups_genes_unique, nonsyn
 
         group_genes_with_EAscores = []
         group_sig_genes = []
+        group_variants = []
 
         for gene in group[1:]:
             if len(gene) == 1:
                 pass
             else:
                 group_genes_with_EAscores.append(gene[0])
+                gene_variants = gene[1:len(gene)]
+                gene_variants = [x for x in gene_variants if x != 'synon']
+                group_variants.append(len(gene_variants))
 
             if gene[0] in sig_single_genes_lst:
                 group_sig_genes.append(gene[0])
@@ -103,6 +111,7 @@ def PrepSamples4LOO_Analysis(sample_input_genes, all_groups_genes_unique, nonsyn
         group_genes_with_EAscores_lst.append(group_genes_with_EAscores)
         group_number_genes_with_EAscores_lst.append(len(group_genes_with_EAscores))
         group_sig_single_genes_lst.append(group_sig_genes)
+        group_total_variants_in_cohort_lst.append(sum(group_variants))
 
     summary_matrix = pd.DataFrame()
     summary_matrix['group_name'] = group_names_lst
@@ -121,6 +130,7 @@ def PrepSamples4LOO_Analysis(sample_input_genes, all_groups_genes_unique, nonsyn
     summary_matrix['number_group_genes_with_EAscores'] = group_number_genes_with_EAscores_lst
     summary_matrix['group_genes_with_EAscores'] = group_genes_with_EAscores_lst
     summary_matrix['group_sig_genes'] = group_sig_single_genes_lst
+    summary_matrix['total_group_variants'] = group_total_variants_in_cohort_lst
 
     text_file = open(txt_summary_location, 'w')
     text_file.write('Summary of Prepping Input Samples into Biological Groups for LOO Analysis' + '\n' + '\n')

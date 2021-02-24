@@ -1,9 +1,9 @@
 Summary of Prepping Input Samples into Biological Groups for LOO Analysis
 
-Number of biological groups: 2082
-Number of unique genes in biological groups: 8830
+Number of biological groups: 1660
+Number of unique genes in biological groups: 8872
 Number of unique genes with at least one mutation in input samples: 250
-Overlap of unique sample input genes and unique biological groups genes: 101
-Number of genes in input samples and groups with >= 1 EA annotation: 101
+Overlap of unique sample input genes and unique biological groups genes: 100
+Number of genes in input samples and groups with >= 1 EA annotation: 100
 
-Time to prep sample for LOO analysis and generate summary matrix: 2.9754607677459717
+Time to prep sample for LOO analysis and generate summary matrix: 3.883843183517456

@@ -10,8 +10,8 @@ start loss
 indel
 fs-indel
 
-Number of stopgain SNV, fs-indels, start loss SNV, and stop loss SNV annotated with EA = 100: 139
-Number of synonymous SNV and indels annotated with EA = synon: 251
+Number of stopgain SNV, fs-indels, and stop loss SNV annotated with EA = 100: 98
+Number of synonymous SNV, indels, and start loss SNV annotated with EA = synon: 292
 Number of nonsynonymous SNV w/o EA annotated with EA = no_EA: 0
 Number of nonsynonymous SNV with EA scores: 99
 Shape of input sample matrix (relevant SNVs only): (489, 4)
@@ -20,4 +20,4 @@ Shape of input sample matrix (relevant SNVs only + drop no_EA SNVs): (489, 4)
 Total number of unique genes with SNVs in input samples after filtering: 250
 Shape of gene x EA matrix: (250, 11)
 
-Time to generate gene x EA matrix: 0.11415290832519531
+Time to generate gene x EA matrix: 0.1591181755065918
