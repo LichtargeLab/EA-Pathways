@@ -26,7 +26,7 @@ def qvalue_filter(row):
         return 0
 
 def threshold(row, a, b, threshold_dictionary):
-    if int(row['functional_group_size']) <= 15 and int(row['functional_group_size']) != 1:
+    if int(row['functional_group_size']) <= 15 and int(row['functional_group_size']) >= 5: #modified for removing smaller pathway simulations
         thresh = threshold_dictionary[int(row['functional_group_size'])]
         return thresh
     else:

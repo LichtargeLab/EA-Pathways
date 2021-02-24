@@ -160,7 +160,7 @@ LogFile.write('Time to perform Step5: ' + str(time.time() - step5_start) + '\n')
 # Step6: Generate simulated biological groups with multiprocessing
 step6_start = time.time()
 print('Now Performing Step6: Generating simulated biological groups')
-lst_small_sims = np.arange(2, 16, 1).tolist()
+lst_small_sims = np.arange(5, 16, 1).tolist() #remove simulations smaller than size 5
 lst_large_sims = np.arange(15, 51, 5).tolist()
 lst_large_sims.remove(15)
 small_and_large_sims = lst_small_sims + lst_large_sims
