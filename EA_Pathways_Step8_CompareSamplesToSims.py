@@ -44,7 +44,7 @@ def collect_core_genes_in_sig_groups(summary_matrix):
         row_foldbetter = summary_matrix.at[row, 'fold_better']
         row_total_variants = summary_matrix.at[row, 'total_group_variants']
         
-        if row_q_value_filter == 1 and row_foldbetter > 1 and row_total_variants >= 10:
+        if row_q_value_filter == 1 and row_foldbetter > 1 and row_total_variants >= 20:
             row_core_genes = [summary_matrix.at[row, 'core_genes']]
             significant_core_genes.extend(row_core_genes)
     
