@@ -1,5 +1,5 @@
-# EA-Reactomes
-Repository for EA-Reactome code, environment, readme files.
+# EA-Pathways
+Repository for EA-Pathways code, environment, readme files.
 
 ## Reqirements
 Required packages are included in ea-pathways.yml. 
