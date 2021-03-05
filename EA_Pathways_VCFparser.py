@@ -93,6 +93,11 @@ def createFinalVariantMatrix(parsedVCFVariantsMatrix):
     parsedVCFVariantsMatrixCleaned_final['Variant_classification'] = parsedVCFVariantsMatrixCleaned_final['Final_EA'].apply(variant_class)
     parsedVCFVariantsMatrixCleaned_final.rename(columns={'Final_Gene': 'gene_ID', 'Final_Sub': 'AAchange', 'Final_EA': 'Action'}, inplace=True)
     parsedVCFVariantsMatrixCleaned_final.replace({'Action': EA_Reactome_dict}, inplace=True)
+    parsedVCFVariantsMatrixCleaned_final['identifier'] = parsedVCFVariantsMatrixCleaned_final['chr'] + '-' + \
+                                                         parsedVCFVariantsMatrixCleaned_final['pos'] + '-' + \
+                                                         parsedVCFVariantsMatrixCleaned_final['ref'] + '-' + \
+                                                         parsedVCFVariantsMatrixCleaned_final['alt']
+    parsedVCFVariantsMatrixCleaned_final['refPop_AC'] = parsedVCFVariantsMatrixCleaned_final['identifier'].map(refPopVariantThreshold_dict)
 
     return parsedVCFVariantsMatrixCleaned_final
 
@@ -121,7 +126,29 @@ def selectCanonicalNMIDtranscript(variant_matrix):
 
     return variant_matrix_final
 
-#code for parsting VCF into EA-Pathways input file
+
+def createACoutputFiles(final_variant_can_df):
+
+    for ac in range(int(refPopVariantThreshold) + 1):
+        if ac == 0:
+            pass
+        else:
+            final_variant_can_df_AC = final_variant_can_df.copy()
+            final_variant_can_df_AC = final_variant_can_df_AC.loc[
+                final_variant_can_df_AC['refPop_AC'] <= int(ac)]
+
+            final_case_df = final_variant_can_df_AC.loc[final_variant_can_df_AC['sample'].isin(cases)]
+            final_control_df = final_variant_can_df_AC.loc[final_variant_can_df_AC['sample'].isin(controls)]
+
+            final_case_df[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'sample', 'refPop_AC']].to_csv(
+                outputPath + analysisName + '_Cases_PathwaysInput_AC' + str(ac) + '.csv',
+                index=False)
+            final_control_df[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'sample', 'refPop_AC']].to_csv(
+                outputPath + analysisName + '_Controls_PathwaysInput_AC' + str(ac) + '.csv',
+                index=False)
+
+
+#code for parsing VCF into EA-Pathways input file
 cases, controls = getCaseControlIds(patientFile)
 allPatients = cases + controls
 print('Number cases, controls:', len(cases),',' ,len(controls))
@@ -149,17 +176,21 @@ for var in vcf:
                 pass
 
 cols = ['chr','pos','ref','alt','sample','gene','NM','sub','EA','GT']
+col_type = {'chr': str, 'pos': str, 'ref': str, 'alt': str}
 parsedVCFforReactomes_df = pd.DataFrame(rows, columns = cols)
+parsedVCFforReactomes_df = parsedVCFforReactomes_df.astype(col_type)
 
 parsedVCFforReactomes_final_df = createFinalVariantMatrix(parsedVCFforReactomes_df)
 
 parsedVCFforReactomes_canfinal_df = selectCanonicalNMIDtranscript(parsedVCFforReactomes_final_df)
 
-parsedVCFforReactomes_final_cases_df = parsedVCFforReactomes_canfinal_df.loc[parsedVCFforReactomes_canfinal_df['sample'].isin(cases)]
-parsedVCFforReactomes_final_controls_df = parsedVCFforReactomes_canfinal_df.loc[parsedVCFforReactomes_canfinal_df['sample'].isin(controls)]
+#parsedVCFforReactomes_final_cases_df = parsedVCFforReactomes_canfinal_df.loc[parsedVCFforReactomes_canfinal_df['sample'].isin(cases)]
+#parsedVCFforReactomes_final_controls_df = parsedVCFforReactomes_canfinal_df.loc[parsedVCFforReactomes_canfinal_df['sample'].isin(controls)]
 
-parsedVCFforReactomes_final_cases_df[['gene_ID','Variant_classification','AAchange','Action','sample']].to_csv(outputPath + analysisName +'_Cases_ReactomeInput.csv', index = False)
-parsedVCFforReactomes_final_controls_df[['gene_ID','Variant_classification','AAchange','Action','sample']].to_csv(outputPath + analysisName +'_Controls_ReactomeInput.csv', index = False)
+#parsedVCFforReactomes_final_cases_df[['gene_ID','Variant_classification','AAchange','Action','sample', 'refPop_AC','identifier']].to_csv(outputPath + analysisName +'_Cases_ReactomeInput.csv', index = False)
+#parsedVCFforReactomes_final_controls_df[['gene_ID','Variant_classification','AAchange','Action','sample', 'refPop_AC','identifier']].to_csv(outputPath + analysisName +'_Controls_ReactomeInput.csv', index = False)
+
+createACoutputFiles(parsedVCFforReactomes_canfinal_df)
 
 print('Time to parse and prep Reactome variants:', time.time() - start)
 
