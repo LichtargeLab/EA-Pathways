@@ -179,6 +179,7 @@ cols = ['chr','pos','ref','alt','sample','gene','NM','sub','EA','GT']
 col_type = {'chr': str, 'pos': str, 'ref': str, 'alt': str}
 parsedVCFforReactomes_df = pd.DataFrame(rows, columns = cols)
 parsedVCFforReactomes_df = parsedVCFforReactomes_df.astype(col_type)
+parsedVCFforReactomes_df.to_csv(outputPath + analysisName + '_rawVariantInfo.csv', index = False)
 
 parsedVCFforReactomes_final_df = createFinalVariantMatrix(parsedVCFforReactomes_df)
 
