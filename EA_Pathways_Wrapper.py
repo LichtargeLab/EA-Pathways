@@ -95,7 +95,8 @@ sample_input_df = pd.read_csv(sample_file, header=0)
 groups_input_df = pd.read_csv(groups_file, header=None)
 
 # variants considered in analysis
-relevant_variants = ['nonsynonymous SNV', 'stopgain SNV', 'synonymous SNV','stop loss','start loss','indel','fs-indel']
+relevant_variants = ['nonsynonymous SNV', 'stopgain SNV', 'synonymous SNV','stop loss','start loss','indel','fs-indel',
+                     'splice site','3_prime_UTR_variant','5_prime_UTR_variant']
 
 # open log file to collect time for each step
 LogFile = open(LogFile_summary_txt_location, 'w')
