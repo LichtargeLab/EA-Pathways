@@ -68,7 +68,8 @@ step7_csv_SimCorePvaluePerc_summary = sample_name + '_Step7_SimCorePvaluePercent
 step8_csv_final_summary = sample_name + '_Step8_FinalAnalysisSummary.csv'
 step8_txt_SigCoreGenes = sample_name + '_Step8_SigCoreGenesAbove5thPercentile.txt'
 step9_hist_plots = sample_name + '_'
-#step4_csv_test = sample_name + '_Step4_SummaryMatrixTest.csv'
+
+step2_csv_test = sample_name + '_Step2_SummaryMatrixTest.csv'
 #step5_csv_test = sample_name + '_Step5_ParallelTestMatrix.csv'
 
 # output file locations
@@ -84,7 +85,8 @@ step7_SimCorePvaluePerc_csv_location = createPath(cwd, outputFolder, step7_csv_S
 step8_FinalSummary_location = createPath(cwd, outputFolder, step8_csv_final_summary)
 step8_SigCoreGenes_location = createPath(cwd, outputFolder, step8_txt_SigCoreGenes)
 step9_HistCoreGenes_location = createPath(cwd, histFolder, step9_hist_plots)
-#step4_TestMatrix_location = createPath(cwd, outputFolder, step4_csv_test)
+
+step2_TestMatrix_location = createPath(cwd, outputFolder, step2_csv_test)
 #step5_TestMatrix_location = createPath(cwd, outputFolder, step5_csv_test)
 
 # initiate start time for full analysis
@@ -117,6 +119,7 @@ sample_gene_EA_matrix, all_sample_genes_EAscores, all_unique_sample_genes, error
                                                                                                              sample_input_df,
                                                                                                              step2_summary_txt_location)
 
+np.savetxt(step2_TestMatrix_location, sample_gene_EA_matrix, delimiter=",")
 LogFile.write('Time to perform Step2: ' + str(time.time() - step2_start) + '\n')
 
 # Step3: Perform KS test on each sample gene to identify individually significant sample genes
