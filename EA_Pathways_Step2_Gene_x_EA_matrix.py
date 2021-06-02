@@ -26,16 +26,16 @@ def generate_sample_gene_by_EAmatrix(user_defined_variants, sample_input, summar
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == '3_prime_UTR_variant', 'Action'] = 'synon'
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == '5_prime_UTR_variant', 'Action'] = 'synon'
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'indel', 'Action'] = 'synon'
-    sample_input_filtered['Action'].fillna('no_EA', inplace = True)
-    nonsyn_error_genes = list(sample_input_filtered[sample_input_filtered['Action'] == 'no_EA']['gene_ID'])
+    sample_input_filtered['Action'].fillna('no EA score', inplace = True)
+    nonsyn_error_genes = list(sample_input_filtered[sample_input_filtered['Action'] == 'no EA score']['gene_ID'])
 
     EA_100 = [x for x in list(sample_input_filtered['Action']) if x == 100]
     syn_0 = [x for x in list(sample_input_filtered['Action']) if x == 'synon']
-    nonsyn_missing_EA = [x for x in list(sample_input_filtered['Action']) if x == 'no_EA']
+    nonsyn_missing_EA = [x for x in list(sample_input_filtered['Action']) if x == 'no EA score']
     nonsyn_with_EA = [x for x in list(sample_input_filtered['Action']) if type(x) != str and x < 100]
 
     # need to drop from sample_input_filtered df genes with 'no_EA'; these are "errored" genes in AK code
-    nonsyn_missing_EA_filter = sample_input_filtered['Action'] != 'no_EA'
+    nonsyn_missing_EA_filter = sample_input_filtered['Action'] != 'no EA score'
     sample_input_filtered_final = sample_input_filtered.copy()
     sample_input_filtered_final = sample_input_filtered_final[nonsyn_missing_EA_filter]
 
@@ -71,7 +71,7 @@ def generate_sample_gene_by_EAmatrix(user_defined_variants, sample_input, summar
     text_file.write('\n')
     text_file.write('Number of stopgain SNV, fs-indels, splice site, and stop loss SNV annotated with EA = 100: '+ str(len(EA_100)) + '\n')
     text_file.write('Number of synonymous SNV, indels, 5/3_UTR, and start loss SNV annotated with EA = synon: '+ str(len(syn_0)) + '\n')
-    text_file.write('Number of nonsynonymous SNV w/o EA annotated with EA = no_EA: '+ str(len(nonsyn_missing_EA))+ '\n')
+    text_file.write('Number of nonsynonymous SNV w/o EA annotated with EA = no EA score: '+ str(len(nonsyn_missing_EA))+ '\n')
     text_file.write('Number of nonsynonymous SNV with EA scores: '+ str(len(nonsyn_with_EA)) + '\n')
     text_file.write('Shape of input sample matrix (relevant SNVs only): '+ str(sample_input_filtered.shape)+ '\n')
     text_file.write('Shape of input sample matrix (relevant SNVs only + drop no_EA SNVs): '+ str(sample_input_filtered_final.shape)+ '\n')
