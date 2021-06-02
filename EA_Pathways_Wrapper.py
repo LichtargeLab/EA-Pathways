@@ -119,7 +119,6 @@ sample_gene_EA_matrix, all_sample_genes_EAscores, all_unique_sample_genes, error
                                                                                                              sample_input_df,
                                                                                                              step2_summary_txt_location)
 
-np.savetxt(step2_TestMatrix_location, sample_gene_EA_matrix, delimiter=",")
 LogFile.write('Time to perform Step2: ' + str(time.time() - step2_start) + '\n')
 
 # Step3: Perform KS test on each sample gene to identify individually significant sample genes
