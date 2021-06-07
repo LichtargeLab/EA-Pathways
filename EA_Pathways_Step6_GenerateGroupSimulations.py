@@ -57,6 +57,8 @@ def generate_simulated_groups(total_simulations, simulation_path_size, gene_EA_m
                     if gene_EA_matrix[row,0] == gene:
                         gene_ea_scores = gene_EA_matrix[row, 1:gene_EA_matrix.shape[1]]
                         gene_ea_scores = [x for x in gene_ea_scores if x != None]
+                        gene_ea_scores = [x for x in gene_ea_scores if x != 'synon']
+                        gene_ea_scores = [float(x) for x in gene_ea_scores]
                         gene_name_with_EA_scores.extend(gene_ea_scores)
                     else:
                         pass

@@ -49,6 +49,8 @@ def PrepSamples4LOO_Analysis(sample_input_genes, all_groups_genes_unique, nonsyn
                     if gene == sample_input_gene_action_matrix[row_inner,0]:
                         gene_ea_scores = sample_input_gene_action_matrix[row_inner, 1:sample_input_gene_action_matrix.shape[1]]
                         gene_ea_scores = [x for x in gene_ea_scores if x != None]
+                        gene_ea_scores = [x for x in gene_ea_scores if x != 'synon']
+                        gene_ea_scores = [float(x) for x in gene_ea_scores]
                         gene_with_EA_lst.extend(gene_ea_scores)
 
                         if len(gene_ea_scores) != 0:
