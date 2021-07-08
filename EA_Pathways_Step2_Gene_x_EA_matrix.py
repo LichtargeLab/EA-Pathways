@@ -32,7 +32,11 @@ def generate_sample_gene_by_EAmatrix(user_defined_variants, sample_input, summar
     EA_100 = [x for x in list(sample_input_filtered['Action']) if x == 100]
     syn_0 = [x for x in list(sample_input_filtered['Action']) if x == 'synon']
     nonsyn_missing_EA = [x for x in list(sample_input_filtered['Action']) if x == 'no EA score']
-    nonsyn_with_EA = [x for x in list(sample_input_filtered['Action']) if type(x) != str and x < 100]
+
+    nonsyn_with_EA = [x for x in list(sample_input_filtered['Action']) if x != 'synon']
+    nonsyn_with_EA = [x for x in nonsyn_with_EA if x != 'no EA score']
+    nonsyn_with_EA = [float(x) for x in nonsyn_with_EA]
+    nonsyn_with_EA = [x for x in nonsyn_with_EA if x < 100]
 
     # need to drop from sample_input_filtered df genes with 'no_EA'; these are "errored" genes in AK code
     nonsyn_missing_EA_filter = sample_input_filtered['Action'] != 'no EA score'
