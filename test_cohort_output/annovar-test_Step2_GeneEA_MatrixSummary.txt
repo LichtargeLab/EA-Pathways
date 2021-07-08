@@ -1,0 +1,24 @@
+Summary of sample_input genes EA dictionary creation process:
+
+Shape of sample_input matrix: (36115, 6)
+Considered (relevant) SNVs: 
+nonsynonymous SNV
+stopgain SNV
+synonymous SNV
+stop loss
+start loss
+indel
+fs-indel
+splice site
+
+Number of stopgain SNV, fs-indels, splice site, start loss, and stop loss SNV annotated with EA = 100: 2447
+Number of synonymous SNV and indels annotated with EA = synon: 10501
+Number of nonsynonymous SNV w/o EA annotated with EA = no EA score: 0
+Number of nonsynonymous SNV with EA scores: 23167
+Shape of input sample matrix (relevant SNVs only): (36115, 6)
+Shape of input sample matrix (relevant SNVs only + drop no EA score SNVs): (36115, 6)
+
+Total number of unique genes with SNVs in input samples after filtering: 13495
+Length of gene x EA dictionary: 13495
+
+Time to generate gene x EA dictionary: 36.5456280708313
