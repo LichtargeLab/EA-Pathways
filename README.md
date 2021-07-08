@@ -10,9 +10,9 @@ Required packages are included in ea-pathways.yml.
 <i>Environment</i>: ea-pathways.yml <br>
 
 <b>Part2</b>: Call wrapper script to analyze cohort variants with EA-Pathways.<br>
-<i>Script</i>: EA_Pathways_Wrapper.py - Call the EA_Pathways_Wrapper script and required parameters.<br>
+<i>Script</i>: EA_Pathways.py - Call the EA_Pathways.py script and required parameters.<br>
 <i>Environment</i>: ea-pathways.yml<br>
-EA_Pathways_Wrapper.py should be located in same directory as other EA-Pathways ".py" files.
+EA_Pathways.py should be located in same directory as other EA-Pathways ".py" files.
 Run time is dependent on number of variants in input cohort and number of biological groups analyzed.
 Code allows for parallelization of analysis to decrease run time. It is advised to use multiple cores when possible.
 <br><br>
@@ -30,15 +30,14 @@ parameter 5 = allele count (AC) threshold indicating which alleles from the refe
 parameter 6 = location where output variant files will be saved<br><br>
 
 <b>Part2</b>:<br>
-python EA_Pathways_Wrapper.py analysis_name input_variants input_groups output_directory output_hist_directory number_cores
+python EA_Pathways.py analysis_name input_variants input_groups output_directory number_cores
 
 Command line parameters:<br>
 parameter 1 = analysis name; prefix added to all output files in analysis<br>
 parameter 2 = location of file containing variants of input cohort<br>
 parameter 3 = location of file containing biological groups of interest<br>
 parameter 4 = location for output files<br>
-parameter 5 = location for histograms of significant biological groups identified in analysis<br>
-parameter 6 = number of cores for parallelization of analysis; enter "1" if running on single core<br>
+parameter 5 = number of cores for parallelization of analysis; enter "1" if running on single core<br>
 
 ## Input/Output File Examples
 If no reference population variants are available, user can manually prep input file for part 2 of EA-Pathways.<br>
