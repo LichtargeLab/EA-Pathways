@@ -54,12 +54,11 @@ def getRefVariantsUnderThreshold(refVariant_df):
 
 def selectTranscriptSubEA(ensp, EA, ensemblProteinid):
     if type(EA) == tuple:
-        try: #if EA score is None value for that transcript, this returns input EA tuple
+        try:
             indexVal = ensemblProteinid.index(ensp)
             final_ea = EA[indexVal]
-            final_ea = round(final_ea,2)
         except:
-            final_ea = EA
+            final_ea = 'no EA score'
     else:
         final_ea = EA
     return final_ea
