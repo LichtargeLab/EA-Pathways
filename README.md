@@ -26,8 +26,9 @@ parameter 1 = analysis name; prefix added to case and control output variant fil
 parameter 2 = location of cohort VCF; VCF tbi file should be in same location as VCF<br>
 parameter 3 = two column csv file with patient ids (column 1) and patient labels (column 2; cases = 1, controls = 0); there should be no header row in the csv<br>
 parameter 4 = location of text file containing reference population variants used to filter cohort VCF (see "Additional Notes" below)<br>
-parameter 5 = allele count (AC) threshold indicating which alleles from the reference population should be included in output variant files<br>
-parameter 6 = location where output variant files will be saved<br><br>
+parameter 5 = minimum allele count (AC) threshold indicating which alleles from the reference population should be included in output variant files<br>
+parameter 6 = maximum allele count (AC) threshold indicating which alleles from the reference population should be included in output variant files<br>
+parameter 7 = location where output variant files will be saved<br><br>
 
 <b>Part2</b>:<br>
 python EA_Pathways.py analysis_name input_variants input_groups output_directory number_cores
