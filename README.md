@@ -19,7 +19,7 @@ Code allows for parallelization of analysis to decrease run time. It is advised 
 
 ## Example Terminal Commands
 <b>Part1</b>:<br>
-python EA_Pathways_VCFparser.py analysis_name cohort_VCF patient_labels reference_variants allele_count_threshold output_directory
+python EA_Pathways_VCFparser.py analysis_name cohort_VCF patient_labels reference_variants allele_count_threshold_min allele_count_threshold_max output_directory
 
 Command line parameters:<br>
 parameter 1 = analysis name; prefix added to case and control output variant files<br>
