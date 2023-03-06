@@ -1,9 +1,0 @@
-Summary of single gene KS tests for input samples:
-
-Total number of EA annotations in input samples: 36115
-Total number of integer EA scores in input samples: 25614
-Total number of unique mutated genes assessed by KS test: 11644
-Length of gene x EA dictionary: 13495
-Shape of sig_single_gene_matrix: (13495, 3)
-
-Time to perform KS test for each unique mutated gene in input samples: 40.24040603637695

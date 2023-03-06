@@ -1,9 +1,0 @@
-Time to perform Step1: 0.4626438617706299
-Time to perform Step2: 36.546387910842896
-Time to perform Step3: 40.241458892822266
-Time to perform Step4: 0.8568010330200195
-Time to perform Step5: 31.98162031173706
-Time to perform Step6: 0.4461379051208496
-Time to perform Step7: 28.103410243988037
-Time to perform Step8: 0.09974408149719238
-Time to perform full analysis - 138.80416893959045

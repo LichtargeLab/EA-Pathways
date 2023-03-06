@@ -1,3 +1,0 @@
-Time to perform Step1: 0.42188405990600586
-Time to perform Step2: 19.549695014953613
-Time to perform full analysis - 20.024946212768555
