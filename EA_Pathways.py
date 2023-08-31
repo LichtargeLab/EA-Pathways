@@ -35,7 +35,7 @@ if __name__ == '__main__':
     sample_file = args['Variants']
     groups_file = args['BiologicalGroups']
     output_directory = os.getcwd() if not args['Output'] else args['Output']
-    number_cores = args['cores']
+    number_cores = args['Cores']
 
     # creating platform independent file paths
     cwd = os.getcwd()
