@@ -92,7 +92,10 @@ def createGeneEAdictionary(user_defined_variants, sample_input, summary_txt_loca
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'synonymous SNV', 'Action'] = 'synon'
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'indel', 'Action'] = 'synon'
     sample_input_filtered['Action'].fillna('no EA score', inplace=True)
-    nonsyn_error_genes = list(sample_input_filtered[sample_input_filtered['Action'] == 'no EA score']['gene_ID'])
+    try:
+        nonsyn_error_genes = list(sample_input_filtered[sample_input_filtered['Action'] == 'no EA score']['gene_ID'])
+    except:
+        nonsyn_error_genes = []
 
     EA_100 = [x for x in list(sample_input_filtered['Action']) if x == 100] #count number EA_100 annotations
     syn_0 = [x for x in list(sample_input_filtered['Action']) if x == 'synon'] #count number synon annotations
