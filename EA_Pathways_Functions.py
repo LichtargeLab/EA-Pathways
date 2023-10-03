@@ -60,11 +60,14 @@ def inputBasicStats(sample_input, groups_input, output_text_location, variant_ty
 
         cancer_variant_gene_lst = []
         for variant in variant_types:
-            variant_df = sample_input[sample_input['Variant_classification']==variant]
-            genes = set(variant_df['gene_ID'])
-            genesInGroups = genes.intersection(all_groups_genes_unique)
-            text_file.write('Total number of input samples ' + variant + 's in biological groups: '+ str(len(genesInGroups)) + '\n')
-            cancer_variant_gene_lst.extend(genesInGroups)
+            try:
+                variant_df = sample_input[sample_input['Variant_classification']==variant]
+                genes = set(variant_df['gene_ID'])
+                genesInGroups = genes.intersection(all_groups_genes_unique)
+                text_file.write('Total number of input samples ' + variant + 's in biological groups: '+ str(len(genesInGroups)) + '\n')
+                cancer_variant_gene_lst.extend(genesInGroups)
+            except:
+                pass
 
         text_file.write('Total input samples (relevant) SNVs in biological groups: ' + str(len(cancer_variant_gene_lst)) + '\n')
         text_file.write('Percentage input samples (relevant) SNVs in biological groups: ' + str(len(cancer_variant_gene_lst)/total_relevant_mts) + '\n')
