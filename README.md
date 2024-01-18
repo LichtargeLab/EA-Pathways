@@ -31,14 +31,14 @@ parameter 6 = maximum allele count (AC) threshold indicating which alleles from 
 parameter 7 = location where output variant files will be saved<br><br>
 
 <b>Part2</b>:<br>
-python EA_Pathways.py analysis_name input_variants input_groups output_directory number_cores
+python EA_Pathways.py --AnalaysisName analysis_name --Variants input_variants.csv --BiologicalGroups input_groups --Output output_directory/ --Cores number_of_cores
 
 Command line parameters:<br>
-parameter 1 = analysis name; prefix added to all output files in analysis<br>
-parameter 2 = location of file containing variants of input cohort<br>
-parameter 3 = location of file containing biological groups of interest<br>
-parameter 4 = location for output files<br>
-parameter 5 = number of cores for parallelization of analysis; enter "1" if running on single core<br>
+--AnalysisName = prefix added to all output files in analysis<br>
+--Variants = location of csv file containing variants of input cohort (i.e., file parsed in part 1)<br>
+--BiologicalGroups = location of file containing biological groups of interest (e.g., Reactomes, GO terms)<br>
+--Output = location for output files<br>
+--Cores = number of cores for parallelization of analysis; enter "1" if running on single core; recommended 10 minimum<br>
 
 ## Input/Output File Examples
 If no reference population variants are available, user can manually prep input file for part 2 of EA-Pathways.<br>
