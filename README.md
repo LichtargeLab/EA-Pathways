@@ -12,7 +12,7 @@ Required packages are included in ea-pathways.yml.
 <b>Part2</b>: Call wrapper script to analyze cohort variants with EA-Pathways.<br>
 <i>Script</i>: EA_Pathways.py - Call the EA_Pathways.py script and required parameters.<br>
 <i>Environment</i>: ea-pathways.yml<br>
-EA_Pathways.py should be located in same directory as other EA-Pathways_Functions.py script.
+EA_Pathways.py should be located in same directory as the EA-Pathways_Functions.py script.
 Run time is dependent on number of variants in input cohort and number of biological groups analyzed.
 Code allows for parallelization of analysis to decrease run time. It is advised to use multiple cores when possible.
 <br><br>
