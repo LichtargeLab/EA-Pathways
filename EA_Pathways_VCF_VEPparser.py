@@ -3,54 +3,64 @@
 """
 @author: Jenn Asmussen
 
-Pilot script to extract variant information from VEP-EA annotated VCF for running EA-Pathways
+Functions for extracting variant information from VEP-EA annotated VCF
 
 """
 
 import pandas as pd 
 import numpy as np 
-from pysam import VariantFile
+import pysam
 import sys
-import csv
 import time
-
-analysisName = sys.argv[1]
-vcfFile = sys.argv[2]
-patientFile = sys.argv[3]
-refPopVariantFile = sys.argv[4]
-minRefPopVariantThreshold = sys.argv[5]
-maxRefPopVariantThreshold = sys.argv[6]
-outputPath = sys.argv[7]
-
-
-def getCaseControlIds(patientLabelFile):
-    patientLabel_df = pd.read_csv(patientLabelFile, header = None)
-    caseIDs = list(patientLabel_df.loc[patientLabel_df[1] == 1][0])
-    controlIDs = list(patientLabel_df.loc[patientLabel_df[1] == 0][0])
-    return caseIDs, controlIDs
-
-def convert_UKB_AF(x):
-    try:
-        item_new = float(x)
-    except ValueError:
-        item_new = 1.1
-    return item_new
+import subprocess
+import multiprocessing as mp
 
 def getRefPopVariants(refPopVariantInfoFile):
     col_names = ['chr', 'pos', 'ref', 'alt', 'ref_AC', 'ref_AF']
-    col_type = {'chr': str, 'pos': str, 'ref': str, 'alt': str, 'ref_AC': int, 'ref_AF': str}
+    col_type = {'chr': str, 'pos': str, 'ref': str, 'alt': str, 'ref_AC': int}
     refVariant_df = pd.read_csv(refPopVariantInfoFile, sep='\t', names=col_names, dtype=col_type)
 
     refVariant_df['identifier'] = refVariant_df['chr'] + '-' + refVariant_df['pos'] + '-' + \
                                          refVariant_df['ref'] + '-' + refVariant_df['alt']
-    #refVariant_df['ref_AF_updated'] = refVariant_df['ref_AF'].apply(convert_UKB_AF)
+    start_count = refVariant_df.shape[0]
     refVariant_df.drop_duplicates('identifier', keep=False, inplace=True)
+    end_count = refVariant_df.shape[0]
+    if start_count != end_count:
+        print('Warning: Duplicate variants exist in ref population file')
+    else:
+        pass
     return refVariant_df
 
-def getRefVariantsUnderThreshold(refVariant_df):
-    refVariantThreshold_df = refVariant_df.loc[(refVariant_df['ref_AC'] <= int(maxRefPopVariantThreshold)) & (refVariant_df['ref_AC'] != 0)]
-    refVariantThreshold_dict = dict(zip(refVariantThreshold_df.identifier, refVariantThreshold_df.ref_AC))
-    return refVariantThreshold_dict
+def collectVCFvariants(input_vcf):
+    vcf_in = pysam.VariantFile(input_vcf, 'r')
+    records = []
+    for record in vcf_in.fetch():
+        info = record.info
+
+        try:
+            ea_score = info['EA']
+        except:
+            ea_score = 'No_EA_Score'
+
+        try:
+            ensembl_proID = info['Ensembl_proteinid']
+        except:
+            ensembl_proID = 'No_Ensembl_ProID'
+
+
+        records.append([record.contig, record.pos, record.ref, record.alts[0], info['Consequence'][0], info['SYMBOL'][0],
+                        info['ENSP'][0], info['HGVSp'][0], ea_score, ensembl_proID, info['AC'][0]])
+
+
+    vcf_in.close()
+
+    cols = ['chr', 'pos', 'ref', 'alt', 'Consequence', 'SYMBOL', 'ENSP', 'HGVSp', 'EA', 'Ensembl_proteinid','Cohort_AC']
+    col_type = {'chr': str, 'pos': str, 'ref': str, 'alt': str}
+
+    record_df = pd.DataFrame(records, columns=cols)
+    record_df = record_df.astype(col_type)
+
+    return record_df
 
 def selectTranscriptSubEA(ensp, EA, ensemblProteinid):
     if type(EA) == tuple:
@@ -113,105 +123,145 @@ def createFinalVariantMatrix(parsedVCFVariantsMatrix):
     parsedVCFVariantsMatrixCleaned['Variant_classification'] = parsedVCFVariantsMatrixCleaned['Consequence'].apply(variant_class)
     parsedVCFVariantsMatrixCleaned['final_EA_Format'] = parsedVCFVariantsMatrixCleaned.apply(lambda x: getFinalEAFormat(x['final_EA'], x['Variant_classification']), axis=1)
 
-    parsedVCFVariantsMatrixCleaned['identifier'] = parsedVCFVariantsMatrixCleaned['chr'] + '-' + \
-                                                   parsedVCFVariantsMatrixCleaned['pos'] + '-' + \
-                                                   parsedVCFVariantsMatrixCleaned['ref'] + '-' + \
-                                                   parsedVCFVariantsMatrixCleaned['alt']
-    parsedVCFVariantsMatrixCleaned['refPop_AC'] = parsedVCFVariantsMatrixCleaned['identifier'].map(refPopVariantThreshold_dict)
     parsedVCFVariantsMatrixCleaned.rename(columns={'SYMBOL': 'gene_ID', 'HGVSp': 'AAchange', 'final_EA_Format': 'Action'}, inplace=True)
 
     return parsedVCFVariantsMatrixCleaned
 
-def createACoutputFiles(final_variant_can_df):
+def filterVCFvariants(var_df, refPopVariantFile, maxAC_threshold, minAC_threshold):
+    ## Get reference population variants
+    refPopVariant_df = getRefPopVariants(refPopVariantFile)
+    print('Number of variants in ref population:', refPopVariant_df.shape[0])
+    refVariant_dict = dict(zip(refPopVariant_df.identifier, refPopVariant_df.ref_AC))
 
-    for ac in range(int(refPopVariantThreshold) + 1):
-        if ac == 0:
+    ## Annotate cohort variants with reference population AC and filter by max/min thresholds
+    var_df['identifier'] = var_df['chr'] + '-' + var_df['pos'] + '-' + var_df['ref'] + '-' + var_df['alt']
+    var_df['refAC'] = var_df['identifier'].map(refVariant_dict)
+    print('Number of cohort variants pre-filtering:', var_df.shape[0])
+    var_df = var_df.loc[(var_df['refAC']>= minAC_threshold)&(var_df['refAC']<= maxAC_threshold)]
+    var_df = var_df[var_df['Cohort_AC']!=0]
+
+    ## Clean variant annotations from VEP/EA annotations
+    var_df = createFinalVariantMatrix(var_df)
+    print('Number of cohort variants post-filtering:', var_df.shape[0])
+
+    return var_df, refVariant_dict
+
+def pool_parseGT_fx(chunked_records, c, vcf_path):
+    args = tuple(zip(chunked_records, [vcf_path] * len(chunked_records)))
+    pool = mp.Pool(processes=c)
+    output = pool.map(parseGT_fx_stdin, args)
+    pool.close()
+    pool.join()
+    return output
+
+def parse_carriers(bcftools_output):
+    """
+    Parse bcftools query output to keep only samples carrying alt alleles.
+    Removes 0/0, 0/., ./., ./0
+    """
+    carriers = []
+
+    for line in bcftools_output:
+
+        if not line:
+            continue
+        chrom, pos, ref, alt, *samples = line.split("\t")
+        samples = [x.split(';') for x in samples]
+        samples = [item for sublist in samples for item in sublist]
+
+        # Filter samples by genotype
+        alt_samples = []
+        for s in samples:
+            if "=" not in s:  # skip malformed
+                continue
+            sample, gt = s.split("=")
+            if gt not in ("0/0", "0/.", "./.", "./0"):  # keep carriers
+                alt_samples.append(sample)
+
+        carriers.append([f"{chrom}-{pos}-{ref}-{alt}", alt_samples])
+
+    return carriers
+
+def parseGT_fx_stdin(args):
+    variant_sites, vcf = args
+    #print(f'Worker started with {len(variant_sites)} sites', flush=True)
+
+    updated_variant_sites = []
+    for variant in variant_sites:
+        chrom, pos, ref, alt = variant.split("-")
+        updated_variant_sites.append(f"{chrom}\t{pos}\t{ref}\t{alt}")
+
+    updated_variant_sites_str = "\n".join(updated_variant_sites)
+
+    cmd = ["bcftools", "view", "-T", "/dev/stdin", vcf, "-Ov"]
+    query_cmd = ["bcftools", "query", "-f", "%CHROM\t%POS\t%REF\t%ALT\t[%SAMPLE=%GT;]\n"]
+
+    # Create the pipeline
+    p1 = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+    # Send the sites string into bcftools view
+    out1, err1 = p1.communicate(input=updated_variant_sites_str)
+
+    # Now pass its output into bcftools query
+    p2 = subprocess.Popen(query_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    out, err2 = p2.communicate(input=out1)
+
+    out = out.strip().split("\n") if out else []
+    sample_dict = parse_carriers(out)
+    return sample_dict
+
+def chunk_list_gen(lst, n):
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
+def getFilteredVCFvariantsGT(var_df, samples_path, ncores, vcf, refAC_dictionary,
+                             maxACthreshold, minACthreshold):
+    '''
+    Estimating that as each variant is parsed by split_variant_sites, this results in ~25KB virtual memory
+    per 100 samples (0.25KB/sample).
+    Want to keep each core at ~1-1.25GB virtual memory.
+    Adjusting chunking of variants by this memory estimate.
+    '''
+
+    ## Collect sample IDs
+    with open(samples_path,'r') as f:
+        samples = f.readlines()
+    samples = [x.strip('\n') for x in samples]
+    print('Number of samples in analysis:', len(samples))
+
+    ## Collect and chunk variants for extracting genotypes
+    variant_sites = var_df['identifier'].tolist()
+    var_per_chunk = int((1*10**9)/(len(samples) * (0.25*10**3)))
+
+    split_variant_sites = []
+    for chunk in chunk_list_gen(variant_sites, var_per_chunk):
+        split_variant_sites.append(chunk)
+
+    ## Parse genotypes
+    variant_sites_gt = pool_parseGT_fx(split_variant_sites, int(ncores), vcf)
+    variant_sites_gt = [item for sublist in variant_sites_gt for item in sublist]
+
+    variant_sites_gt_sampleFiltered = []
+    for i in variant_sites_gt:
+        i_samples = [x for x in i[1] if x in samples]
+        if len(i_samples) == 0:
             pass
         else:
-            final_variant_can_df_AC = final_variant_can_df.copy()
-            final_variant_can_df_AC = final_variant_can_df_AC.loc[
-                final_variant_can_df_AC['refPop_AC'] <= int(ac)]
+            variant_sites_gt_sampleFiltered.append([i[0], i_samples])
 
-            final_case_df = final_variant_can_df_AC.loc[final_variant_can_df_AC['sample'].isin(cases)]
-            final_control_df = final_variant_can_df_AC.loc[final_variant_can_df_AC['sample'].isin(controls)]
+    variant_sites_gt_df = pd.DataFrame(variant_sites_gt_sampleFiltered)
+    variant_sites_gt_df.rename(columns={0:'identifier',1:'samples'}, inplace=True)
+    variant_sites_gt_df['refAC'] = variant_sites_gt_df['identifier'].map(refAC_dictionary)
+    variant_sites_gt_df = variant_sites_gt_df.loc[(variant_sites_gt_df['refAC']<=maxACthreshold)&
+                                                  (variant_sites_gt_df['refAC']>=minACthreshold)]
+    variant_sites_gt_df.dropna(axis=1, how='all', inplace = True)
+    variant_sites_gt_df_dict = variant_sites_gt_df.set_index('identifier')['samples'].to_dict()
 
-            final_case_df[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'sample', 'refPop_AC']].to_csv(
-                outputPath + analysisName + '_Cases_PathwaysInput_AC' + str(ac) + '.csv',
-                index=False)
-            final_control_df[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'sample', 'refPop_AC']].to_csv(
-                outputPath + analysisName + '_Controls_PathwaysInput_AC' + str(ac) + '.csv',
-                index=False)
-
-def createACoutputFiles2(final_variant_can_df):
-
-    ac_lst = np.arange(int(minRefPopVariantThreshold), int(maxRefPopVariantThreshold) + 1, 1).tolist()
-    for ac in ac_lst:
-        final_variant_can_df_AC = final_variant_can_df.copy()
-        final_variant_can_df_AC = final_variant_can_df_AC.loc[final_variant_can_df_AC['refPop_AC'] <= int(ac)]
-
-        final_case_df = final_variant_can_df_AC.loc[final_variant_can_df_AC['sample'].isin(cases)]
-        final_control_df = final_variant_can_df_AC.loc[final_variant_can_df_AC['sample'].isin(controls)]
-
-        final_case_df[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'sample', 'refPop_AC']].to_csv(
-            outputPath + analysisName + '_Cases_PathwaysInput_AC' + str(ac) + '.csv',
-            index=False)
-        final_control_df[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'sample', 'refPop_AC']].to_csv(
-            outputPath + analysisName + '_Controls_PathwaysInput_AC' + str(ac) + '.csv',
-            index=False)
-
-
-#code for parsing VCF into EA-Pathways input file
-cases, controls = getCaseControlIds(patientFile)
-allPatients = cases + controls
-print('Number cases, controls:', len(cases),',' ,len(controls))
-
-refPopVariant_df = getRefPopVariants(refPopVariantFile)
-print('Number of variants in ref population:', refPopVariant_df.shape[0])
-
-refPopVariantThreshold_dict = getRefVariantsUnderThreshold(refPopVariant_df)
-print('Number of variants with AC <=',str(maxRefPopVariantThreshold),':',len(refPopVariantThreshold_dict))
-
-vcf = VariantFile(vcfFile)
-
-start = time.time()
-rows = []
-
-for var in vcf:
-    vcfVariantID = str(var.chrom) + '-' +  str(var.pos) + '-' + str(var.ref) + '-' + str(var.alts[0])
-    if vcfVariantID in refPopVariantThreshold_dict:
-        if 'synonymous_variant' in var.info['Consequence'][0]:
-            pass
-        elif 'missense_variant' in var.info['Consequence'][0]:
-            for sample in allPatients:
-                gt = var.samples[str(sample)]['GT']
-                if 1 in gt and '.' not in gt:
-                    rows.append([var.chrom, var.pos, var.ref, var.alts[0], sample, var.info['SYMBOL'][0],
-                                 var.info['ENSP'][0], var.info['HGVSp'][0],
-                                 var.samples[str(sample)]['GT'],
-                                 var.info['Consequence'][0], var.info['EA'], var.info['Ensembl_proteinid']])
-                else:
-                    pass
-        else:
-            for sample in allPatients:
-                gt = var.samples[str(sample)]['GT']
-                if 1 in gt and '.' not in gt:
-                    rows.append([var.chrom, var.pos, var.ref, var.alts[0], sample, var.info['SYMBOL'][0],
-                                 var.info['ENSP'][0], var.info['HGVSp'][0],
-                                 var.samples[str(sample)]['GT'],
-                                 var.info['Consequence'][0], '.', '.'])
-                else:
-                    pass
-
-cols = ['chr','pos','ref','alt','sample','SYMBOL','ENSP','HGVSp','GT','Consequence','EA','Ensembl_proteinid']
-col_type = {'chr': str, 'pos': str, 'ref': str, 'alt': str}
-parsedVCFforReactomes_df = pd.DataFrame(rows, columns = cols)
-parsedVCFforReactomes_df = parsedVCFforReactomes_df.astype(col_type)
-
-parsedVCFforReactomes_final_df = createFinalVariantMatrix(parsedVCFforReactomes_df)
-parsedVCFforReactomes_final_df.to_csv(outputPath + 'VEP_parsing_pilot.csv', index = False)
-
-createACoutputFiles2(parsedVCFforReactomes_final_df)
-
-print('Time to parse and prep Reactome variants:', time.time() - start)
-
-
+    var_df = var_df.copy()
+    var_df['samples'] = var_df['identifier'].map(variant_sites_gt_df_dict)
+    var_df['samples'].fillna(0, inplace = True)
+    var_df = var_df[var_df['samples']!=0]
+    var_df['dup_count'] = var_df['samples'].apply(lambda x: len(x)) ## Duplicate rows match sample representation in cohort
+    var_df_expanded = var_df.loc[np.repeat(var_df.index, var_df['dup_count'])].reset_index(drop=True)
+    var_df_expanded = var_df_expanded[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'refAC','samples']]
+    return var_df_expanded
