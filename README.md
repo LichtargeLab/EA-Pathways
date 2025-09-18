@@ -56,10 +56,10 @@ Input cohort variant EA scores should be labeled as:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;7. Stop loss = leave blank <br>
 
 ## Additional Notes
-<b>For faster analyses --</b>:<br>
+<b>For faster analyses --</b><br>
 EA-Pathways sorts cohort variants into genes and pathways. This is not a sample-level analysis. If the user does not need to associate sample IDs with cohort variants (i.e., does not need to know sample genotypes) then it is highly recommended to run the pipeline without calling the "Collect_GT" flag. When calling "Collect_GT," the majority of the analysis run time is dedicated to parsing genotypes from the input VCF. This may take several hours depending on degree of parallelization.
 
-<b>Reference population variant file format --</b>:<br>
+<b>Reference population variant file format --</b><br>
 If reference population variants are in VCF format, then user can use the following command to generate the reference population variant file:<br>
 <pre><code>bcftools query -f '%CHROM\t%POS\t%REF\t%ALT\t%INFO/AC\n' reference_population.vcf.gz > reference_populaton_INFO.txt </code></pre>
 Reference file txt should be tab separated with the following columns and no header:<br>
