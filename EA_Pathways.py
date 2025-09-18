@@ -109,7 +109,9 @@ if __name__ == '__main__':
 
             cohort_variants_df.to_csv(output_directory + sample_name + '_cohort_variants_GT.csv', index=False)
         else:
-            cohort_variants_df = cohort_variants_df[['gene_ID', 'Variant_classification','AAchange','Action','refAC']]
+            cohort_variants_df = cohort_variants_df.loc[np.repeat(cohort_variants_df.index,
+                                                                  cohort_variants_df['Cohort_AC'])].reset_index(drop=True)
+            cohort_variants_df = cohort_variants_df[['gene_ID', 'Variant_classification','AAchange','Action','refAC','Cohort_AC']]
             cohort_variants_df.to_csv(output_directory + sample_name + '_cohort_variants.csv', index=False)
 
         LogFile.write('Time to parse, filter, format cohort variants: ' + str(time.time() - part1_start) + '\n')

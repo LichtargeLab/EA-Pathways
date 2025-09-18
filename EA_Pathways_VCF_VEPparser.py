@@ -263,5 +263,5 @@ def getFilteredVCFvariantsGT(var_df, samples_path, ncores, vcf, refAC_dictionary
     var_df = var_df[var_df['samples']!=0]
     var_df['dup_count'] = var_df['samples'].apply(lambda x: len(x)) ## Duplicate rows match sample representation in cohort
     var_df_expanded = var_df.loc[np.repeat(var_df.index, var_df['dup_count'])].reset_index(drop=True)
-    var_df_expanded = var_df_expanded[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'refAC','samples']]
+    var_df_expanded = var_df_expanded[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'refAC','samples','Cohort_AC']]
     return var_df_expanded
