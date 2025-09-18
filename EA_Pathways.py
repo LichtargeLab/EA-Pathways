@@ -100,18 +100,21 @@ if __name__ == '__main__':
     if vcfFile != None and sample_file == None:
         part1_start = time.time()
         cohort_variants_df = collectVCFvariants(vcfFile)
-        ## In the following function --> if refPopVariantFile == None, run with cohort singletons
         cohort_variants_df, refAC_dict = filterVCFvariants(cohort_variants_df, refPopVariantFile, maxRefAC, minRefAC)
 
         if gt_status == 1:
             cohort_variants_df = getFilteredVCFvariantsGT(cohort_variants_df, patientFile, number_cores, vcfFile,
                                                           refAC_dict, maxRefAC, minRefAC)
-
             cohort_variants_df.to_csv(output_directory + sample_name + '_cohort_variants_GT.csv', index=False)
         else:
             cohort_variants_df = cohort_variants_df.loc[np.repeat(cohort_variants_df.index,
                                                                   cohort_variants_df['Cohort_AC'])].reset_index(drop=True)
-            cohort_variants_df = cohort_variants_df[['gene_ID', 'Variant_classification','AAchange','Action','refAC','Cohort_AC']]
+            if refAC_dict != None:
+                cohort_variants_df = cohort_variants_df[['gene_ID', 'Variant_classification','AAchange','Action',
+                                                         'refAC','Cohort_AC']]
+            else:
+                cohort_variants_df = cohort_variants_df[['gene_ID', 'Variant_classification', 'AAchange', 'Action',
+                                                         'Cohort_AC']]
             cohort_variants_df.to_csv(output_directory + sample_name + '_cohort_variants.csv', index=False)
 
         LogFile.write('Time to parse, filter, format cohort variants: ' + str(time.time() - part1_start) + '\n')
@@ -248,7 +251,7 @@ if __name__ == '__main__':
     sigPaths_Output_df, sigCoreGenes_Output = combineSummaryMatrices(optimized_pathway_output_dict)
     sigPaths_Output_df.to_csv(output_dictionary['final_csv'])
     text_file = open(output_dictionary['final_txt'], 'w')
-    for gene in summary_sig_core_genes:
+    for gene in sigCoreGenes_Output:
         text_file.write(gene + '\n')
     text_file.close()
 

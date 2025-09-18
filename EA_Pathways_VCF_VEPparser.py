@@ -128,17 +128,29 @@ def createFinalVariantMatrix(parsedVCFVariantsMatrix):
     return parsedVCFVariantsMatrixCleaned
 
 def filterVCFvariants(var_df, refPopVariantFile, maxAC_threshold, minAC_threshold):
-    ## Get reference population variants
-    refPopVariant_df = getRefPopVariants(refPopVariantFile)
-    print('Number of variants in ref population:', refPopVariant_df.shape[0])
-    refVariant_dict = dict(zip(refPopVariant_df.identifier, refPopVariant_df.ref_AC))
 
-    ## Annotate cohort variants with reference population AC and filter by max/min thresholds
     var_df['identifier'] = var_df['chr'] + '-' + var_df['pos'] + '-' + var_df['ref'] + '-' + var_df['alt']
-    var_df['refAC'] = var_df['identifier'].map(refVariant_dict)
     print('Number of cohort variants pre-filtering:', var_df.shape[0])
-    var_df = var_df.loc[(var_df['refAC']>= minAC_threshold)&(var_df['refAC']<= maxAC_threshold)]
-    var_df = var_df[var_df['Cohort_AC']!=0]
+
+    try:
+        ## Filter cohort variants using ref population AC values
+        refPopVariant_df = getRefPopVariants(refPopVariantFile)
+        print('Number of variants in ref population:', refPopVariant_df.shape[0])
+        refVariant_dict = dict(zip(refPopVariant_df.identifier, refPopVariant_df.ref_AC))
+        var_df['refAC'] = var_df['identifier'].map(refVariant_dict)
+        var_df = var_df.loc[(var_df['refAC'] >= minAC_threshold) & (var_df['refAC'] <= maxAC_threshold)]
+        var_df = var_df[var_df['Cohort_AC'] != 0]
+    except:
+        ## Filter cohort variants using cohort AC values
+        if refPopVariantFile == None:
+            print('No ref population AC values provided. Using cohort AC for filtering.')
+            var_df = var_df.loc[(var_df['Cohort_AC'] >= minAC_threshold) & (var_df['Cohort_AC'] <= maxAC_threshold)]
+            refVariant_dict = None
+        else:
+            print('Ref population AC values provided, but not importing correctly.')
+            print('Using cohort AC for filtering.')
+            var_df = var_df.loc[(var_df['Cohort_AC'] >= minAC_threshold) & (var_df['Cohort_AC'] <= maxAC_threshold)]
+            refVariant_dict = None
 
     ## Clean variant annotations from VEP/EA annotations
     var_df = createFinalVariantMatrix(var_df)
@@ -251,9 +263,18 @@ def getFilteredVCFvariantsGT(var_df, samples_path, ncores, vcf, refAC_dictionary
 
     variant_sites_gt_df = pd.DataFrame(variant_sites_gt_sampleFiltered)
     variant_sites_gt_df.rename(columns={0:'identifier',1:'samples'}, inplace=True)
-    variant_sites_gt_df['refAC'] = variant_sites_gt_df['identifier'].map(refAC_dictionary)
-    variant_sites_gt_df = variant_sites_gt_df.loc[(variant_sites_gt_df['refAC']<=maxACthreshold)&
-                                                  (variant_sites_gt_df['refAC']>=minACthreshold)]
+
+    if refAC_dictionary != None:
+        variant_sites_gt_df['refAC'] = variant_sites_gt_df['identifier'].map(refAC_dictionary)
+        variant_sites_gt_df = variant_sites_gt_df.loc[(variant_sites_gt_df['refAC']<=maxACthreshold)&
+                                                    (variant_sites_gt_df['refAC']>=minACthreshold)]
+    else:
+        ## Grab cohort_AC_dictionary as reference AC for filtering if no ref AC provided
+        cohortAC_dictionary = dict(zip(var_df['identifier'], var_df['Cohort_AC']))
+        variant_sites_gt_df['Cohort_AC'] = variant_sites_gt_df['identifier'].map(cohortAC_dictionary)
+        variant_sites_gt_df = variant_sites_gt_df.loc[(variant_sites_gt_df['Cohort_AC'] <= maxACthreshold) &
+                                                      (variant_sites_gt_df['Cohort_AC'] >= minACthreshold)]
+
     variant_sites_gt_df.dropna(axis=1, how='all', inplace = True)
     variant_sites_gt_df_dict = variant_sites_gt_df.set_index('identifier')['samples'].to_dict()
 
@@ -261,7 +282,12 @@ def getFilteredVCFvariantsGT(var_df, samples_path, ncores, vcf, refAC_dictionary
     var_df['samples'] = var_df['identifier'].map(variant_sites_gt_df_dict)
     var_df['samples'].fillna(0, inplace = True)
     var_df = var_df[var_df['samples']!=0]
-    var_df['dup_count'] = var_df['samples'].apply(lambda x: len(x)) ## Duplicate rows match sample representation in cohort
+    var_df['dup_count'] = var_df['samples'].apply(lambda x: len(x)) ## Duplicate rows to match sample representation in cohort
     var_df_expanded = var_df.loc[np.repeat(var_df.index, var_df['dup_count'])].reset_index(drop=True)
-    var_df_expanded = var_df_expanded[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'refAC','samples','Cohort_AC']]
+    try:
+        var_df_expanded = var_df_expanded[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'refAC',
+                                           'samples','Cohort_AC']]
+    except:
+        var_df_expanded = var_df_expanded[['gene_ID', 'Variant_classification', 'AAchange', 'Action', 'samples',
+                                           'Cohort_AC']]
     return var_df_expanded
