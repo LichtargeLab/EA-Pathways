@@ -84,6 +84,7 @@ def createGeneEAdictionary(user_defined_variants, sample_input, output_location,
 
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'stopgain SNV', 'Action'] = 100
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'stop loss', 'Action'] = 100
+    sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'STOP', 'Action'] = 100
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'start loss', 'Action'] = 100
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'fs-indel', 'Action'] = 100
     sample_input_filtered.loc[sample_input_filtered['Variant_classification'] == 'splice site', 'Action'] = 100
