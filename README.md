@@ -9,7 +9,8 @@ EA-Pathways can be ran on a standard laptop or desktop with 16GB+ RAM. However, 
 Required packages are included in ea-pathways.yml. <br>
 
 ## Installation
-The repository can be cloned using: git@github.com:LichtargeLab/EAML.git
+The repository can be cloned using: <br>
+git clone git@github.com:LichtargeLab/EAML.git
 
 
 ## Usage
