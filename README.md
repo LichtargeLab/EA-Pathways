@@ -15,7 +15,7 @@ git clone git@github.com:LichtargeLab/EAML.git
 
 ## Usage
 To run EA-Pathways from a cohort VCF file, use the following command: <br>
-<pre><code> python EA_Pathways.py --AnalysisName ExpName --BiologicalGroups test_cohort_input/Reactome2023_Greater5Less100_03032023.csv --Output outputDirectory --Cores 10 --VCF cohortVCF --Samples samples.txt --RefPopAC reference_populaton_INFO.txt </code></pre>
+<pre><code> python EA_Pathways.py --AnalysisName ExpName --BiologicalGroups test_cohort_input/Reactome2023_Greater5Less100_03032023.csv --Output outputDirectory --Cores 10 --VCF cohortVCF --RefPopAC reference_populaton_INFO.txt </code></pre>
 
 ### Required command line parameters for running from VCF:<br>
 --AnalysisName = prefix added to all output files <br>
