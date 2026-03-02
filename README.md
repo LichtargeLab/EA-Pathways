@@ -21,10 +21,10 @@ To run EA-Pathways from a cohort VCF file, use the following command: <br>
 --AnalysisName = prefix added to all output files <br>
 --VCF = location of cohort VCF with VEP and EA annotations<br>
 --BiologicalGroups = location of file containing biological groups of interest (e.g., Reactomes, GO terms)<br>
+--Samples = single column txt file with sample IDs<br>
 --Output = output directory<br>
 
 ### Optional command line parameters:<br>
---Samples = single column txt file with sample IDs<br>
 --Cores = number of cores for parallelization of analysis; default = 1<br>
 --MinAC = minimun allele count considered in analysis; default = 1<br>
 --MaxAC = maximum allele count considered in analysis; default = 5<br>
