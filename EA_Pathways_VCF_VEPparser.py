@@ -16,6 +16,12 @@ import subprocess
 import multiprocessing as mp
 
 def getRefPopVariants(refPopVariantInfoFile):
+    """Imports and processes reference variant file
+    Args:
+        refPopVariantInfoFile (path): Path to reference variant file with external AC, AF values
+    Returns:
+        refVariant_df (df): Reference variants in dataframe format with unique identifier
+    """
     col_names = ['chr', 'pos', 'ref', 'alt', 'ref_AC', 'ref_AF']
     col_type = {'chr': str, 'pos': str, 'ref': str, 'alt': str, 'ref_AC': int}
     refVariant_df = pd.read_csv(refPopVariantInfoFile, sep='\t', names=col_names, dtype=col_type)
@@ -32,6 +38,12 @@ def getRefPopVariants(refPopVariantInfoFile):
     return refVariant_df
 
 def collectVCFvariants(input_vcf):
+    """Extracts required VEP and EA annotations from input VCF
+    Args:
+        input_vcf (vcf file): VCF file with cohort variants annotated with VEP and EA scores
+    Returns:
+        DataFrame (df): Required VEP and EA annotations for each variant in input_vcf in df format
+    """
     vcf_in = pysam.VariantFile(input_vcf, 'r')
     records = []
     for record in vcf_in.fetch():
@@ -63,6 +75,14 @@ def collectVCFvariants(input_vcf):
     return record_df
 
 def selectTranscriptSubEA(ensp, EA, ensemblProteinid):
+    """Extracts EA score from canonical ENSP transcript
+    Args:
+        ensp (str): VEP annotated canonical transcript ID
+        EA (tuple): tuple of EA scores from transcripts assigned to variant
+        ensemblProteinid (tuple): tuple of transcripts assigned to variant
+    Returns:
+        final_EA (str): EA score on canconical transcript
+    """
     if type(EA) == tuple:
         try:
             indexVal = ensemblProteinid.index(ensp)
@@ -74,6 +94,12 @@ def selectTranscriptSubEA(ensp, EA, ensemblProteinid):
     return final_ea
 
 def variant_class(csq):
+    """Updates csq nomenclature to MAF format
+    Args:
+        csq (str): VEP consequence type of variant
+    Returns:
+        variant_class (str): Updated MAF consequence type of variant
+    """
     if "frameshift" in csq:
         variant_class = 'fs-indel'
     elif "splice_acceptor_variant" in csq:
@@ -100,6 +126,13 @@ def variant_class(csq):
     return variant_class
 
 def getFinalEAFormat(ea, variant_class):
+    """Converts missense EA scores to floats
+    Args:
+        ea (str): EA score extracted from canonical ENSP transcript
+        variant_class (str): Updated MAF consequence type of variant
+    Returns:
+        finalEAFormat (str/float): Float version of EA score if not "no EA score" or LoF variant
+    """
     emptyEA = ['fs-indel','splice site','stopgain SNV','start loss','stop loss','indel','5_prime_UTR_variant',
                '3_prime_UTR_variant']
     if variant_class in emptyEA:
@@ -112,6 +145,12 @@ def getFinalEAFormat(ea, variant_class):
     return finalEAFormat
 
 def createFinalVariantMatrix(parsedVCFVariantsMatrix):
+    """Processes variants parsed from input_vcf for canonical transcript, associated EA score, and filters for consequence type
+    Args:
+        parsedVCFVariantsMatrix (df): Dataframe of min/max AC filtered variants from cohort input_vcf
+    Returns:
+        parsedVCFVariantsMatrixCleaned (df): Processed variants with canonical transcript, AA change, csq, and EA scores
+    """
     ensp_to_filter = ['.']
     parsedVCFVariantsMatrixCleaned = parsedVCFVariantsMatrix.copy()
     parsedVCFVariantsMatrixCleaned = parsedVCFVariantsMatrixCleaned.loc[~parsedVCFVariantsMatrixCleaned.ENSP.isin(ensp_to_filter)]
@@ -128,7 +167,18 @@ def createFinalVariantMatrix(parsedVCFVariantsMatrix):
     return parsedVCFVariantsMatrixCleaned
 
 def filterVCFvariants(var_df, refPopVariantFile, maxAC_threshold, minAC_threshold):
+    """Filters cohort variants extracted from input_vcf based on user arguments
+    Args:
+        var_df (df): Required VEP and EA annotations for each variant in input_vcf in df format
+        refPopVariantFile (path): If included, path to tab sep text file with reference allele counts for cohort variants
+        maxAC_threshold (int): Max AC count of variant that will be included in analysis
+        minAC_threshold (int): Min AC count of variant that will be included in analysis
 
+    Returns:
+        var_df (df): DataFrame of filtered and processed cohort variants
+        refVariant_dict (dict): Dictionary of unique variant identifier and external AC (if passed as input arg)
+
+    """
     var_df['identifier'] = var_df['chr'] + '-' + var_df['pos'] + '-' + var_df['ref'] + '-' + var_df['alt']
     print('Number of cohort variants pre-filtering:', var_df.shape[0])
 
@@ -159,6 +209,14 @@ def filterVCFvariants(var_df, refPopVariantFile, maxAC_threshold, minAC_threshol
     return var_df, refVariant_dict
 
 def pool_parseGT_fx(chunked_records, c, vcf_path):
+    """Retrieves per sample GT of cohort variants extracted from input_vcf based on user arguments
+    Args:
+        chunked_records (list): list of variant chunks to be sent to each core
+        c (int): Number of cores
+        vcf_path (path): Path to input_vcf of cohort
+    Returns:
+        output (df): Chunked variant sites with associated GT per sample
+    """
     args = tuple(zip(chunked_records, [vcf_path] * len(chunked_records)))
     pool = mp.Pool(processes=c)
     output = pool.map(parseGT_fx_stdin, args)
@@ -195,8 +253,8 @@ def parse_carriers(bcftools_output):
     return carriers
 
 def parseGT_fx_stdin(args):
+    "Parsed GT from chunked variant sites using bcftools commands"
     variant_sites, vcf = args
-    #print(f'Worker started with {len(variant_sites)} sites', flush=True)
 
     updated_variant_sites = []
     for variant in variant_sites:
@@ -223,17 +281,25 @@ def parseGT_fx_stdin(args):
     return sample_dict
 
 def chunk_list_gen(lst, n):
+    '''Updates variant list chunk'''
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
 
 def getFilteredVCFvariantsGT(var_df, samples_path, ncores, vcf, refAC_dictionary,
                              maxACthreshold, minACthreshold):
-    '''
-    Estimating that as each variant is parsed by split_variant_sites, this results in ~25KB virtual memory
-    per 100 samples (0.25KB/sample).
-    Want to keep each core at ~1-1.25GB virtual memory.
-    Adjusting chunking of variants by this memory estimate.
-    '''
+    """Retrieves per sample GT of cohort variants extracted from input_vcf based on user arguments
+    Args:
+        var_df (df): DataFrame of filtered and processed cohort variants
+        samples_path (path): Path to single column text file of sample IDs
+        ncores (int): Number of cores for parallelization
+        vcf (path): Path to input_vcf of cohort variants
+        refAC_dictionary (dict): Dictionary of reference cohort AC values
+        maxAC_threshold (int): Max AC count of variant that will be included in analysis
+        minAC_threshold (int): Min AC count of variant that will be included in analysis
+
+    Returns:
+        var_df_expanded (df): DataFrame of cohort variants with cohort frequency representation and sample IDs
+    """
 
     ## Collect sample IDs
     with open(samples_path,'r') as f:

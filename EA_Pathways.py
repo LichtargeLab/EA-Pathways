@@ -74,8 +74,9 @@ def verbose_output(sample_name, cwd_path, out_dir):
                      final_combined_txt_location]))
 
 if __name__ == '__main__':
-    args = parse_args()
+    '''Parse arguments and run EA-Pathways'''
 
+    args = parse_args()
     sample_name = args['AnalysisName']
     sample_file = args['Variants']
     groups_file = args['BiologicalGroups']
@@ -96,7 +97,7 @@ if __name__ == '__main__':
     LogFile_summary_txt_location = createPath(cwd, output_directory, sample_name + '_EA-Pathways_Analysis_Time.txt')
     LogFile = open(LogFile_summary_txt_location, 'w')
 
-    # Part 1: Parse, filter, and format variants from VCF
+    # Part 1, Option A: Parse, filter, and format variants from VCF
     if vcfFile != None and sample_file == None:
         part1_start = time.time()
         cohort_variants_df = collectVCFvariants(vcfFile)
@@ -119,6 +120,7 @@ if __name__ == '__main__':
 
         LogFile.write('Time to parse, filter, format cohort variants: ' + str(time.time() - part1_start) + '\n')
 
+    # Part 1, Option B: Load variants from pre-parsed input file
     elif sample_file != None and vcfFile == None:
         cohort_variants_df = pd.read_csv(sample_file)
     else:
@@ -126,7 +128,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # Part 2: Perform EA-Pathways
-    sample_input_df = cohort_variants_df
+    sample_input_df = cohort_variants_df.copy()
     groups_input_df = pd.read_csv(groups_file, header=None)
     relevant_variants = ['nonsynonymous SNV', 'stopgain SNV', 'synonymous SNV','stop loss','start loss','indel','fs-indel',
                          'splice site']
