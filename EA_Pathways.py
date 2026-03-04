@@ -50,6 +50,14 @@ def parse_args():
     return arguments
 
 def verbose_output(sample_name, cwd_path, out_dir):
+    """Generates dictionary of output paths for use when verbose output is flagged
+    Args:
+        sample_name (str): Prefix name of each output file
+        cwd_path (path): Current working directory
+        out_dir (path): output directory
+    Returns:
+        dictionary: dictionary of paths to verbose output files
+    """
 
     step1_txt_summary = sample_name + '_BasicStats.txt'
     step2_txt_summary = sample_name + '_GeneEA_MatrixSummary.txt'
@@ -112,10 +120,10 @@ if __name__ == '__main__':
                                                                   cohort_variants_df['Cohort_AC'])].reset_index(drop=True)
             if refAC_dict != None:
                 cohort_variants_df = cohort_variants_df[['gene_ID', 'Variant_classification','AAchange','Action',
-                                                         'refAC','Cohort_AC']]
+                                                         'refAC','Cohort_AC','identifier']]
             else:
                 cohort_variants_df = cohort_variants_df[['gene_ID', 'Variant_classification', 'AAchange', 'Action',
-                                                         'Cohort_AC']]
+                                                         'Cohort_AC','identifier']]
             cohort_variants_df.to_csv(output_directory + sample_name + '_cohort_variants.csv', index=False)
 
         LogFile.write('Time to parse, filter, format cohort variants: ' + str(time.time() - part1_start) + '\n')

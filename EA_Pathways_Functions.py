@@ -20,10 +20,21 @@ import sys
 import ast
 
 def createPath(currentDirectory, folderName, fileName):
+    """Creates joint directory path based on input arguements"""
     return os.path.join(currentDirectory, folderName, fileName)
 
 def inputBasicStats(sample_input, groups_input, output_location, variant_types, verbose):
-
+    """Generates basic stats on input variants and biological gene groups used to run pipeline
+    Args:
+        sample_input (df): df with cohort variants parsed from vcf
+        groups_input (df): df with gene groups used to define pathways
+        output_location (dict): dictionary of output directory paths
+        variant_types (list): list of variant types included in analysis
+        verbose (str): flag used to designate creation of intermediate progress files
+    Returns:
+        all_groups_genes_unique (list): list of unique genes in groups_input file
+        all_groups_genes (list): list of genes with frequency representation in groups_input file
+    """
     total_mutations = sample_input.shape[0]
     total_relevant_mts = 0
     sample_summary_dict = {}
@@ -77,7 +88,19 @@ def inputBasicStats(sample_input, groups_input, output_location, variant_types, 
     return all_groups_genes_unique, all_groups_genes
 
 def createGeneEAdictionary(user_defined_variants, sample_input, output_location, verbose):
-
+    """Updates EA scores in cohort variants parsed from VCF. Creates dictionary
+    where keys are genes and values are the EA scores of variants from that gene.
+    Args:
+        user_defined_variants (list): list of variant types to be included in analysis
+        sample_input (df): df with cohort variants parsed from vcf
+        output_location (dict): dictionary of output directory paths
+        verbose (str): flag used to designate creation of intermediate progress files
+    Returns:
+        sampleGeneEAdict (dict): gene x EA score dictionary
+        sample_genes_all_EA_scores (list): all EA scores from input variant set
+        sample_input_genes (list): all genes from input variant set
+        errored_genes (list): errored genes from input variant set
+    """
     sample_input_filtered = sample_input.copy()
     sample_input_filtered = sample_input_filtered[sample_input_filtered['Variant_classification'].isin(user_defined_variants)]
     sample_input_filtered['Action'] = sample_input_filtered['Action'].astype('object')
@@ -148,7 +171,17 @@ def createGeneEAdictionary(user_defined_variants, sample_input, output_location,
     return sampleGeneEAdict, sample_genes_all_EA_scores, sample_input_genes, list(set(nonsyn_error_genes))
 
 def KStestIndividualGenes(sample_genes_all_EA_scores, sample_input_gene_action_dict, output_location, verbose):
-
+    """Performs single gene KS test to identify and flag genes with biased EA distributions prior
+    to pathway-based analysis.
+    Args:
+        sample_genes_all_EA_scores (list): list of EA scores from all genes in input variants
+        sample_input_gene_action_dict (dict): gene x EA score dictionary
+        output_location (dict): dictionary of output directory paths
+        verbose (str): flag used to designate creation of intermediate progress files
+    Returns:
+        sample_genes_all_float_EA_scores (list): list of all EA scores as floats
+        sig_single_genes_lst (list): list of genes with a significantly biased EA distribution by KS test
+    """
     sample_genes_all_float_EA_scores = [x for x in sample_genes_all_EA_scores if x != 'synon']
     sample_genes_all_float_EA_scores = [float(x) for x in sample_genes_all_float_EA_scores]
 
@@ -184,8 +217,7 @@ def KStestIndividualGenes(sample_genes_all_EA_scores, sample_input_gene_action_d
     ks_merged_df.drop(columns='p_value_y', inplace=True)
     ks_merged_df.rename(columns={'p_value_x': 'p_value'}, inplace=True)
 
-    filter_sig_genes = ks_merged_df['q_value'] < 0.1
-    sig_single_genes_lst = list(ks_merged_df[filter_sig_genes]['gene'])
+    sig_single_genes_lst = list(ks_merged_df[ks_merged_df['q_value'] < 0.1]['gene'])
     ks_merged_df.to_csv(output_location['step3_csv'], index=False)
 
     if verbose != 'N':
@@ -205,7 +237,21 @@ def KStestIndividualGenes(sample_genes_all_EA_scores, sample_input_gene_action_d
 
 def PrepSamples4LOO_Analysis(sample_input_genes, all_groups_genes_unique, nonsyn_errored_genes, groups_input,
                              sample_input_gene_action_dict, sig_single_genes_lst, output_location, verbose):
-
+    """Sorts genes into biological groups for LOO analysis.
+    Args:
+        sample_input_genes (list): list of unique genes from input variants
+        all_groups_genes_unique (list): list of unique genes from biological groupings used for analysis
+        nonsyn_errored_genes (list): errored genes from input variant set
+        groups_input (df): df of biological gene groupings
+        sample_input_gene_action_dict (dict): gene X EA score dictionary
+        sig_single_genes_lst (list): list of genes with biased EA score distributions
+        output_location (dict): dictionary of output directory paths
+        verbose (str): flag used to designate creation of intermediate progress files
+    Returns:
+        summary_matrix (df): df that summarized number of genes, sig genes, errored genes per pathway
+        groups_with_noSigGenes_and_EA_scores_lst (list): list of pathways with non-significant genes and their
+        corresponding EA scores
+    """
     # Part1: Prep groups with EA scores for LOO analysis
     overlapping_sample_and_group_genes = set(sample_input_genes).intersection(all_groups_genes_unique)
     groups_input_id_lst = list(groups_input[0])
@@ -330,13 +376,22 @@ def PrepSamples4LOO_Analysis(sample_input_genes, all_groups_genes_unique, nonsyn
     return summary_matrix, groups_with_noSigGenes_and_EA_scores_lst
 
 def sims_loo_multiprocessing(arg):
-    simulation = arg[0]
+    """Sends LOO pathway jobs to cores."""
+    prepped_pathway = arg[0]
     background = arg[1]
-    name, ini_pvalue, core_gen, cor_pvalue = group_LOO_core_gene_analysis(simulation, background)
+    name, ini_pvalue, core_gen, cor_pvalue = group_LOO_core_gene_analysis(prepped_pathway, background)
     return name, ini_pvalue, core_gen, cor_pvalue
 
-def pool_loo_analysis_sims_fx(all_simulations, EA_background, cores):
-    args = tuple(zip(all_simulations, [EA_background] * len(all_simulations)))
+def pool_loo_analysis_sims_fx(loo_prepped_pathways, EA_background, cores):
+    """Initiates multiprocessing of LOO pathway optimization.
+    Args:
+        loo_prepped_pathways (list): list of prepped pathways for LOO analysis
+        EA_background (list): list of background EA scores from input variants
+        cores (int): number cores for parallelization
+    Returns:
+        output (list): list of LOO results for each prepped pathway
+    """
+    args = tuple(zip(loo_prepped_pathways, [EA_background] * len(loo_prepped_pathways)))
     pool = mp.Pool(processes=cores)
     output = pool.map(sims_loo_multiprocessing, args)
     pool.close()
@@ -344,6 +399,16 @@ def pool_loo_analysis_sims_fx(all_simulations, EA_background, cores):
     return output
 
 def group_LOO_core_gene_analysis(biological_group_noSigGenes_EAscores_item, background_EAscores):
+    """Performs LOO optimization per prepped pathway.
+    Args:
+        biological_group_noSigGenes_EAscores_item (list): pathway with genes and EA scores
+        background_EAscores (list): list of background EA scores from input variants
+    Returns:
+        group_name (str): pathway name
+        initial_group_pvalue (float): initial pathway KS pvalue pathway genes against background EA distribution
+        group_core_genes (list): list of core genes in pathway with most biased EA score distribution
+        core_group_pvalue (float): KS pvalue of pathway core genes against background EA distribution
+    """
     background_float_EAscores = [float(x) for x in background_EAscores]
 
     group_name = biological_group_noSigGenes_EAscores_item[0]
@@ -419,6 +484,16 @@ def group_LOO_core_gene_analysis(biological_group_noSigGenes_EAscores_item, back
 
 def generate_simulated_groups(total_simulations, simulation_path_size, gene_EA_dict, ALL_group_input_genes,
                               sig_single_genes_lst):
+    """Builds simulated pathway sets
+    Args:
+        total_simulations (int): number of simulations to generate
+        simulation_path_size (int): size of simulated pathway
+        gene_EA_dict (dict): gene X EA dictionary from input variants
+        ALL_group_input_genes (list): all genes in biological groups with frequency representation
+        sig_single_genes_lst (list): list of genes with significantly biased EA distributions
+    Returns:
+        lst_final_sim_paths_NoSigGenes: simulated pathways with randomly selected genes and their EA scores from cohort variants
+    """
     lst_all_genes = ALL_group_input_genes
     lst_all_genes = [elem for elem in lst_all_genes if elem not in sig_single_genes_lst]
 
@@ -462,6 +537,7 @@ def generate_simulated_groups(total_simulations, simulation_path_size, gene_EA_d
     return lst_final_sim_paths_NoSigGenes
 
 def build_sims_multiprocessing(arg):
+    "Sends arguments and function to generate simulated pathways to cores."
     num_sims = arg[0]
     size_sims = arg[1]
     sample_gene_EA_dict = arg[2]
@@ -472,6 +548,18 @@ def build_sims_multiprocessing(arg):
 
 def pool_fx_sims(number_simulations, simulation_size_lst, gene_EA_dict, ALL_group_input_genes, sig_single_genes_lst,
                  cores):
+    """Builds simulated pathway sets with parallelization.
+    Args:
+        number_simulations (int): number of simulations to perform at each simulated pathway size
+        simulation_size_lst (list): list of simulation pathway sizes
+        gene_EA_dict (dict): gene X EA dictionary from input variants
+        ALL_group_input_genes (list): all genes in biological groups with frequency representation
+        sig_single_genes_lst (list): list of genes with significantly biased EA distributions
+        cores (int): number of cores for parallelization
+
+    Returns:
+        output: simulated pathways with randomly selected genes and their EA scores from cohort variants
+    """
     args = tuple(zip(np.full(len(simulation_size_lst), number_simulations).tolist(),
                      simulation_size_lst, [gene_EA_dict] * len(simulation_size_lst),
                      [ALL_group_input_genes] * len(simulation_size_lst),
@@ -483,6 +571,15 @@ def pool_fx_sims(number_simulations, simulation_size_lst, gene_EA_dict, ALL_grou
     return output
 
 def collect_sim_core_pvalues_and_percentiles(list_all_group_sizes, LOO_KS_sim_output):
+    """Builds simulated pathway sets with parallelization.
+    Args:
+        list_all_group_sizes (list): list of all pathway simulation sizes
+        LOO_KS_sim_output (df): LOO output of simulated pathways
+    Returns:
+        all_core_pvalues_lst (list): list of all pvalues at each simulation size
+        all_core_percentiles_lst (list): list of percentile pvalues at each simulation size
+    """
+
     all_core_pvalues_lst = []
     all_core_percentiles_lst = []
     for sim_size in list_all_group_sizes:
@@ -537,6 +634,13 @@ def foldbetter(row):
     return fold_better
 
 def collect_core_genes_in_sig_groups(summary_matrix):
+    """Collects core genes across all significant pathways.
+    Args:
+        summary_matrix (df): summary df of true pathways based on genes/EA scores from cohort
+    Returns:
+        significant_core_genes_set (list): set of core genes from significant pathways defined as passing q-value
+        threshold, having fold-better > 1, and having at least 20 variants in the pathway before LOO optimization.
+    """
     significant_core_genes = []
     for row in range(summary_matrix.shape[0]):
         row_q_value_filter = summary_matrix.at[row, 'passed_q_value_filter']
@@ -553,7 +657,15 @@ def collect_core_genes_in_sig_groups(summary_matrix):
     return significant_core_genes_set
 
 def compare_to_simulations(small_and_large_sims_lst, sim_percentile_matrix, summary_matrix):
-
+    """Compares KS pvalues of true pathways to simulated pathways of same size
+    Args:
+        small_and_large_sims_lst (list): list of all pathway simulation sizes
+        sim_percentile_matrix (df): df of percentile pvalue thresholds for each simulation size
+        summary_matrix (df): summary df of true pathways based on genes/EA scores from cohort
+    Returns:
+        summary_matrix (df): updated summary df of true pathways with 5th percentile p-value threshold applied to
+        identify pathways that outperform simulated pathways
+    """
     xvalues = small_and_large_sims_lst
     yvalues = list(sim_percentile_matrix[5])
     xvalues = [float(x) for x in xvalues]

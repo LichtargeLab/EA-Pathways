@@ -47,6 +47,7 @@ def collectVCFvariants(input_vcf):
     vcf_in = pysam.VariantFile(input_vcf, 'r')
     records = []
     for record in vcf_in.fetch():
+        identifier = record.id
         info = record.info
 
         try:
@@ -61,16 +62,17 @@ def collectVCFvariants(input_vcf):
 
 
         records.append([record.contig, record.pos, record.ref, record.alts[0], info['Consequence'][0], info['SYMBOL'][0],
-                        info['ENSP'][0], info['HGVSp'][0], ea_score, ensembl_proID, info['AC'][0]])
+                        info['ENSP'][0], info['HGVSp'][0], ea_score, ensembl_proID, info['AC'][0], identifier])
 
 
     vcf_in.close()
 
-    cols = ['chr', 'pos', 'ref', 'alt', 'Consequence', 'SYMBOL', 'ENSP', 'HGVSp', 'EA', 'Ensembl_proteinid','Cohort_AC']
+    cols = ['chr', 'pos', 'ref', 'alt', 'Consequence', 'SYMBOL', 'ENSP', 'HGVSp', 'EA', 'Ensembl_proteinid','Cohort_AC','identifier']
     col_type = {'chr': str, 'pos': str, 'ref': str, 'alt': str}
 
     record_df = pd.DataFrame(records, columns=cols)
     record_df = record_df.astype(col_type)
+    print(record_df.head(10))
 
     return record_df
 
